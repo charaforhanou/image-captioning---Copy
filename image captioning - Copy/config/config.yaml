@@ -1,0 +1,46 @@
+# Main training configuration for MCCAG (R2Gen-aligned run).
+
+seed: 42
+device: cuda
+
+dataset_config: config/dataset_config.yaml
+model_config: config/model_config.yaml
+
+training:
+  batch_size: 16            # reduce to 8 or 4 if the GPU runs out of memory
+  grad_accum_steps: 2       # effective batch size = batch_size * grad_accum_steps = 32
+  num_epochs: 30            # 2069 train studies; early stopping will likely cut sooner
+  learning_rate: 2.0e-5
+  warmup_steps: 1000
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  label_smoothing: 0.1
+  coverage_loss_weight: 0.15
+  diversity_loss_weight: 0.1
+  num_workers: 4
+  pin_memory: true
+  fp16: true
+  early_stopping_patience: 8   # IU X-Ray is small/noisy; a bit more patience helps
+  early_stopping_metric: meteor
+  checkpoint_every: 5
+  log_every: 10
+  val_log_samples: 5
+
+evaluation:
+  batch_size: 8
+  num_workers: 4
+  max_length: 128          # R2Gen reports are short; confirm with tokenizer p95
+  min_length: 25
+  length_penalty: 1.5
+  coverage_penalty: 0.1
+  beam_size: 3
+  temperature: 1.0
+  n_bootstrap: 1000
+  confidence: 0.95
+  seed: 42
+
+paths:
+  checkpoint_dir: checkpoints
+  log_dir: logs/training/runs
+  eval_log_dir: logs/evaluation
+  results_dir: results

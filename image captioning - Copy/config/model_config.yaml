@@ -1,0 +1,77 @@
+# MCCAG architecture configuration.
+#
+# Image resolution is 224x224 (ViT-B/16 -> 14x14=196 patch tokens + 1 CLS =
+# 197 tokens), matching every "196"/"197" token-count reference in the
+# architecture spec (Components 1, 5, 6, 8). See plan/README for rationale.
+
+hidden_dim: 768
+
+vision:
+  backbone: vit_base_patch16_224
+  image_size: 224
+  patch_size: 16
+  num_patches: 196
+  num_tokens: 197
+  num_layers: 12
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.1
+  num_frozen_layers: 8 # freeze first 8 of 12 blocks, fine-tune last 4
+
+concepts:
+  max_concepts: 50
+  hidden_dim: 768
+
+graph_transformer:
+  num_layers: 6
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.1
+  pos_enc_dim: 6
+  top_k_similar: 5
+
+fusion:
+  num_heads: 12
+  memory_tokens: 32
+  sparse_topk: 50
+  dropout: 0.1
+
+memory:
+  memory_size: 512
+  top_k: 32
+  decay: 0.01
+  num_heads: 12
+
+decoder:
+  num_layers: 6
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.1
+  vocab_size: 8000 # overridden at runtime by the trained tokenizer's vocab size
+  max_length: 128  # was 512; aligned with R2Gen short reports
+  min_length: 3    # was 50; do NOT force long generations
+
+generation:
+  beam_size: 3
+  length_penalty: 0.6
+  coverage_penalty: 0.5
+  max_length: 128  # was 512
+  min_length: 3    # was 50
+  temperature: 0.8
+
+# Ablation flags - the full MCCAG variants from the spec are obtained purely
+# by overriding these via config, no separate model classes are needed:
+#   MCCAG-Full:        all true, fusion_type=triangular, vision_backbone=vit, decoder_type=mccag
+#   MCCAG-NoGraph:     use_graph=false   (bag-of-concepts, no graph transformer)
+#   MCCAG-NoConcept:   use_concepts=false (ViT only)
+#   MCCAG-NoMemory:    use_memory=false
+#   MCCAG-SimpleFusion: fusion_type=concat
+#   CNN-Baseline:      vision_backbone=resnet50, use_concepts=false, use_memory=false, fusion_type=concat
+#   Transformer-Baseline: use_concepts=false, use_memory=false, decoder_type=standard, fusion_type=concat
+ablation:
+  use_concepts: true
+  use_graph: true
+  use_memory: true
+  fusion_type: triangular # triangular | concat
+  vision_backbone: vit # vit | resnet50
+  decoder_type: mccag # mccag | standard

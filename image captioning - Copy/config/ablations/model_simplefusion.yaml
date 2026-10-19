@@ -1,0 +1,54 @@
+hidden_dim: 768
+vision:
+  backbone: vit_base_patch16_224
+  image_size: 224
+  patch_size: 16
+  num_patches: 196
+  num_tokens: 197
+  num_layers: 12
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.1
+  num_frozen_layers: 8
+concepts:
+  max_concepts: 50
+  hidden_dim: 768
+graph_transformer:
+  num_layers: 6
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.1
+  pos_enc_dim: 6
+  top_k_similar: 5
+fusion:
+  num_heads: 12
+  memory_tokens: 32
+  sparse_topk: 50
+  dropout: 0.1
+memory:
+  memory_size: 512
+  top_k: 32
+  decay: 0.01
+  num_heads: 12
+decoder:
+  num_layers: 6
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.1
+  vocab_size: 8000
+  max_length: 128
+  min_length: 3
+generation:
+  beam_size: 3
+  length_penalty: 0.6
+  coverage_penalty: 0.5
+  max_length: 128
+  min_length: 3
+  temperature: 0.8
+ablation:
+  use_concepts: true
+  use_graph: true
+  use_memory: true
+  fusion_type: concat
+  vision_backbone: vit
+  decoder_type: mccag

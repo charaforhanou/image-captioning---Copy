@@ -1,0 +1,62 @@
+# Dataset paths and preprocessing configuration for the IU X-Ray dataset.
+#
+# R2Gen-aligned run: the generation target and the train/val/test partition now
+# come from the official Chen et al. 2020 split, via data/processed/metadata_r2gen.csv.
+
+raw:
+  images_dir: dataset/NLMCXR_png
+  reports_dir: dataset/NLMCXR_reports/ecgen-radiology
+  captions_csv: dataset/iu_xray.csv
+
+processed:
+  root: data/processed
+  metadata_csv: data/processed/metadata_r2gen.csv      # <-- R2Gen-aligned metadata
+  concept_cache_dir: data/processed/concept_cache_image
+  concept_embeddings: data/processed/concept_embeddings.pt
+  cooccurrence_file: data/processed/cooccurrence.json
+  tokenizer_dir: data/processed/tokenizer_r2gen        # <-- R2Gen-trained tokenizer
+
+# Splits are now driven by the `split` column inside metadata_r2gen.csv.
+# The dataset accepts the split NAME directly; the .txt paths below still work
+# because the loader resolves the file stem ("train.txt" -> "train").
+splits:
+  dir: data/splits
+  train_file: train
+  val_file: val
+  test_file: test
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  seed: 42
+
+# Medical concept extraction (scispacy + UMLS linking substitute for
+# RadGraph/MetaMap, see README for rationale).
+concepts:
+  spacy_model: en_core_sci_md
+  linker_threshold: 0.7
+  allowed_tuis: ["T047", "T048", "T190", "T020", "T023"]
+  max_concepts: 50
+  embedding_model: microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext
+  embedding_dim: 768
+  cooccurrence_threshold: 5
+
+image:
+  size: 224
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+text:
+  max_length: 128          # was 512; R2Gen reports are short (confirm with tokenizer p95)
+  vocab_size: 8000
+  special_tokens:
+    - "[PAD]"
+    - "[UNK]"
+    - "[CLS]"
+    - "[SEP]"
+    - "[REPORT_START]"
+    - "[FINDING]"
+    - "[END_FINDING]"
+    - "[IMPRESSION]"
+    - "[END_IMPRESSION]"
+    - "[EOS]"
+    - "[MEMORY]"
